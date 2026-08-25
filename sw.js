@@ -1,8 +1,9 @@
-const CACHE_NAME = 'farm-cache-v1';
+const CACHE_NAME = 'farm-cache-v2';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json'
+  './weigh.html'
 ];
 
 // ติดตั้ง Service Worker และเก็บไฟล์ลง Cache
