@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บันทึกชั่งปลา</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: 'Sarabun', sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
+    .card { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
+    h3 { text-align: center; color: #0288d1; margin-top: 5px; }
+    .btn-back { display: inline-block; background: #e0e0e0; color: #333; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 10px; }
+    .section { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 15px; background: #fafafa; }
+    .section-title { font-weight: bold; color: #0288d1; border-bottom: 2px solid #0288d1; padding-bottom: 3px; margin-bottom: 10px; display: inline-block; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .bucket-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .bucket-item input { text-align: center; padding: 8px 2px; }
+    .summary-box { background: #e3f2fd; padding: 12px; border-radius: 8px; font-size: 14px; }
+    .sum-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .sum-row.total { font-size: 16px; font-weight: bold; color: #d32f2f; border-top: 1px dashed #90caf9; padding-top: 8px; margin-top: 4px; }
+    .btn-save { background: #4caf50; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <a href="index.html" class="btn-back">⬅ กลับหน้าหลัก</a>
+  <h3>⚖️ ตารางชั่งขึ้น/ชั่งลง</h3>
+
+  <div class="section">
+    <label>ประเภทรายการ</label>
+    <select id="tradeType">
+      <option value="รับเข้าปลา">📥 บันทึกรับเข้าปลา</option>
+      <option value="ขายปลา">📤 บันทึกขายปลา</option>
+    </select>
+    <label>ชื่อเกษตรกร / ขนส่ง (ทะเบียนรถ)</label>
+    <input type="text" id="customerName" placeholder="เช่น น้าพงศ์ บบ3600">
+    <div class="grid-2">
+      <div><label>บ่อ/กระชังที่</label><input type="text" id="pondNum"></div>
+      <div><label>วันที่</label><input type="date" id="tradeDate"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. สุ่มไซส์</div>
+    <div class="grid-2">
+      <div><label>นับได้ (ตัว)</label><input type="number" id="sampleCount" placeholder="0"></div>
+      <div><label>ชั่งได้ (กก.)</label><input type="number" id="sampleWeight" placeholder="0"></div>
+    </div>
+    <label>น้ำหนักเฉลี่ยต่อตัว (กรัม)</label>
+    <input type="text" id="sampleAvg" readonly style="background:#e0e0e0; font-weight:bold;">
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. บันทึกชุดการชั่ง (ถัง 1-20)</div>
+    <div class="bucket-grid" id="bucketsContainer">
+      <!-- JavaScript จะสร้างช่องกรอก 20 ช่องตรงนี้ -->
+    </div>
+  </div>
+
+  <div class="section summary-box">
+    <div class="section-title">3. สรุปผลการชั่ง</div>
+    <div class="sum-row"><span>รวมน้ำหนักตาชั่ง (กก.)</span><span id="sumTotalScale">0.00</span></div>
+    <div class="sum-row">
+      <span>น้ำหนักปลาเป้าหมาย/ถัง</span>
+      <input type="number" id="targetFishWeight" value="5" style="width: 60px; padding: 2px; text-align:center;">
+    </div>
+    <div class="sum-row"><span>จำนวนน้ำ (ถัง)</span><span id="sumBucketCount">0</span></div>
+    <div class="sum-row"><span>รวมน้ำหนักปลา (กก.)</span><span id="sumTotalFish">0.00</span></div>
+    <div class="sum-row"><span>หัก 2%</span><span id="sumDeduct">0.00</span></div>
+    <div class="sum-row total"><span>น้ำหนักสุทธิ (กก.)</span><span id="sumNet">0.00</span></div>
+  </div>
+
+  <button class="btn-save" id="saveBtn" onclick="saveData()">💾 บันทึกข้อมูลลง Google Sheets</button>
+</div>
+
+<script>
+  // ==========================================
+  // 🔴 เอาลิงก์ Web App URL จาก Google มาวางในบรรทัดนี้:
+  const SCRIPT_URL = https://script.google.com/macros/s/AKfycbzxjERC9BhPSpFWZhrkEGwBmrlD8ErO0KRCT1mCiLgQcMNgSsxRqCH0NO3LqES1wxbZWg/exec; 
+  // ==========================================
+
+  // สร้างช่องถัง 1-20
+  const container = document.getElementById('bucketsContainer');
+  for(let i=1; i<=20; i++) {
+    container.innerHTML += `<div class="bucket-item"><input type="number" id="b${i}" placeholder="ถัง ${i}"></div>`;
+  }
+
+  // เซ็ตวันที่ปัจจุบันเป็นค่าเริ่มต้น
+  document.getElementById('tradeDate').valueAsDate = new Date();
+
+  // ฟังก์ชันคำนวณทั้งหมด (อิงสูตรจากชีต)
+  function calculate() {
+    let count = parseFloat(document.getElementById('sampleCount').value) || 0;
+    let weight = parseFloat(document.getElementById('sampleWeight').value) || 0;
+    document.getElementById('sampleAvg').value = (count > 0 && weight > 0) ? ((weight * 1000) / count).toFixed(2) : '';
+
+    let totalScale = 0, bucketCount = 0;
+    for (let i = 1; i <= 20; i++) {
+      let val = parseFloat(document.getElementById('b' + i).value);
+      if (val > 0) { totalScale += val; bucketCount++; }
+    }
+
+    let targetFish = parseFloat(document.getElementById('targetFishWeight').value) || 0;
+    let totalFish = bucketCount * targetFish;
+    let deduct = totalFish * 0.02;
+    let net = totalFish - deduct;
+
+    document.getElementById('sumTotalScale').innerText = totalScale.toFixed(2);
+    document.getElementById('sumBucketCount').innerText = bucketCount;
+    document.getElementById('sumTotalFish').innerText = totalFish.toFixed(2);
+    document.getElementById('sumDeduct').innerText = deduct.toFixed(3);
+    document.getElementById('sumNet').innerText = net.toFixed(3);
+  }
+
+  document.querySelectorAll('input').forEach(input => input.addEventListener('input', calculate));
+
+  function saveData() {
+    let btn = document.getElementById('saveBtn');
+    btn.innerText = 'กำลังบันทึก...'; btn.disabled = true;
+
+    let payload = {
+      sheetName: "ประวัติรับ-ขายปลา",
+      data: {
+        "วันที่": document.getElementById('tradeDate').value,
+        "ประเภท": document.getElementById('tradeType').value,
+        "บ่อ/กระชัง": document.getElementById('pondNum').value,
+        "ลูกค้า/ขนส่ง": document.getElementById('customerName').value,
+        "สุ่ม(ตัว)": document.getElementById('sampleCount').value,
+        "สุ่มเฉลี่ย(กรัม)": document.getElementById('sampleAvg').value,
+        "รวมน้ำหนักตาชั่ง": document.getElementById('sumTotalScale').innerText,
+        "จำนวนถัง": document.getElementById('sumBucketCount').innerText,
+        "รวมน้ำหนักปลา": document.getElementById('sumTotalFish').innerText,
+        "หัก2%": document.getElementById('sumDeduct').innerText,
+        "น้ำหนักสุทธิ(กก.)": document.getElementById('sumNet').innerText
+      }
+    };
+
+    fetch(SCRIPT_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+    .then(r => r.json())
+    .then(data => {
+      alert("บันทึกข้อมูลเรียบร้อย ข้อมูลเข้า Sheet 'ประวัติรับ-ขายปลา' แล้ว!");
+      for(let i=1; i<=20; i++) document.getElementById('b'+i).value = ''; // ล้างถัง
+      calculate();
+      btn.innerText = '💾 บันทึกข้อมูลลง Google Sheets'; btn.disabled = false;
+    }).catch(e => { alert("เกิดข้อผิดพลาด"); btn.disabled = false; });
+  }
+</script>
+</body>
+</html>
