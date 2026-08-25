@@ -1,0 +1,15 @@
+{
+  "name": "ระบบจัดการฟาร์มปลา",
+  "short_name": "FarmApp",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0288d1",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2980/2980649.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
