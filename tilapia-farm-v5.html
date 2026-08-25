@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="th"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width,initial-scale=1.0"> <title>ผังกระชังปลาทับทิม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"> <link href="https://fonts.googleapis.com/css2?family=Taviraj:wght@300;400;500;600&family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style> :root{ --water-deep:#122A31; --water-mid:#1C444C; --paper:#EFE9DA; --paper-alt:#E2D9C2; --ink:#16262A; --ink-soft:#4E5E5D; --gold:#C79A3E; --ok:#5B7F4A; --watch:#C79A3E; --ready:#A9552E; --sick:#A63B32; --empty:#84908F; --radius:10px; --font-display:'Taviraj',serif; --font-body:'Sarabun',sans-serif; --font-mono:'JetBrains Mono',monospace; } *{box-sizing:border-box} html,body{ margin:0; min-height:100%; } body{ font-family:var(--font-body); background:#122A31; } button,input,select,textarea{ font-family:inherit; } button{ cursor:pointer; } .app{ min-height:100vh; color:var(--ink); background: radial-gradient(120% 140% at 15% -10%,rgba(46,110,120,.30),transparent 55%), linear-gradient(180deg,var(--water-mid),var(--water-deep)); padding-bottom:48px; } @media (prefers-reduced-motion:no-preference){ .app{ position:relative; overflow:hidden; } .app:before{ content:""; position:absolute; inset:0; pointer-events:none; background: repeating-linear-gradient( 100deg, rgba(255,255,255,.02) 0, rgba(255,255,255,.02) 2px, transparent 2px, transparent 46px ); animation:ripple 16s linear infinite; } @keyframes ripple{ from{background-position-x:0} to{background-position-x:400px} } } /* HEADER */ .banner{ background:#12181A; display:flex; align-items:center; gap:16px; padding:16px 20px; position:relative; z-index:1; border-bottom:3px solid var(--gold); } .banner .fence{ flex:0 0 auto; } .banner-title{ flex:1; min-width:0; } .farm-name{ font-family:var(--font-display); font-weight:500; font-size:clamp(20px,3.4vw,30px); color:#F6F2E7; margin:0; cursor:text; border-bottom:1px dashed transparent; display:inline-block; max-width:100%; } .farm-name:hover{ border-color:rgba(246,242,231,.35); } .farm-sub{ color:#9FB0AF; font-size:12.5px; margin:4px 0 0; font-family:var(--font-mono); } .total-badge{ flex:0 0 auto; background:#F6F2E7; color:var(--ink); border-radius:12px; padding:8px 18px; text-align:center; min-width:110px; } .total-badge .l{ font-size:10.5px; color:var(--ink-soft); } .total-badge .n{ font-family:var(--font-mono); font-weight:700; font-size:22px; line-height:1.15; } .total-badge .n span{ font-size:12px; font-weight:500; font-family:var(--font-body); } /* STATS */ .stats-row{ display:flex; gap:10px; flex-wrap:wrap; margin:18px 20px 6px; position:relative; z-index:1; } .stat{ background:rgba(239,233,218,.08); border:1px solid rgba(239,233,218,.16); border-radius:var(--radius); padding:9px 15px; min-width:100px; } .stat .n{ font-family:var(--font-mono); font-weight:600; font-size:19px; color:#F6F2E7; line-height:1.1; } .stat .l{ font-size:11px; color:#AFC0BF; margin-top:2px; } /* CONTROLS */ .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:16px 20px 8px; position:relative; z-index:1; } .btn{ font-size:13.5px; font-weight:500; border-radius:8px; border:1px solid rgba(239,233,218,.3); background:rgba(239,233,218,.08); color:#F1EEE3; padding:8px 14px; transition:.15s; } .btn:hover{ background:rgba(239,233,218,.18); } .btn.primary{ background:var(--gold); border-color:var(--gold); color:#1B1305; font-weight:600; } .btn.primary:hover{ background:#D6AC53; } .btn.danger{ border-color:rgba(166,59,50,.6); color:#F3C7C2; } .btn.danger:hover{ background:rgba(166,59,50,.25); } /* ZONES */ .layout{ position:relative; z-index:1; padding:8px 20px 0; } .zone-block{ margin-bottom:22px; } .zone-label{ font-family:var(--font-mono); font-size:12px; color:var(--zone-color,var(--gold)); letter-spacing:.06em; margin:0 0 9px 2px; display:flex; align-items:center; gap:8px; font-weight:600; } .zone-label .dot{ width:9px; height:9px; border-radius:50%; background:var(--zone-color,var(--gold)); } .zone-label .line{ flex:1; height:1px; background:linear-gradient( 90deg, var(--zone-color,var(--gold)), transparent ); opacity:.55; } .walkway{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; padding:10px 8px 14px; border-top:2px dashed rgba(239,233,218,.2); } .cage{ width:118px; border-radius:8px; background:var(--paper); border:1px solid rgba(0,0,0,.08); overflow:hidden; text-align:left; box-shadow:0 6px 14px rgba(0,0,0,.18); transition:.12s; padding:0; } .cage:hover{ transform:translateY(-3px); box-shadow:0 10px 18px rgba(0,0,0,.26); } .cage:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; } .cage-top{ height:34px; background:var(--zone-color,var(--empty)); display:flex; align-items:center; justify-content:space-between; padding:0 8px; } .cage-top .code{ font-family:var(--font-mono); font-weight:700; font-size:13px; color:white; } .cage-top .status-dot{ width:8px; height:8px; border-radius:50%; background:var(--status-color,#fff); border:1px solid rgba(255,255,255,.6); } .cage-body{ padding:7px 9px 9px; } .cage-line{ font-size:11.5px; color:var(--ink-soft); display:flex; justify-content:space-between; gap:5px; } .cage-line b{ font-family:var(--font-mono); font-weight:600; color:var(--ink); font-size:11.5px; } .add-tile{ width:118px; min-height:88px; border-radius:8px; border:2px dashed rgba(239,233,218,.4); background:transparent; color:rgba(239,233,218,.75); display:flex; align-items:center; justify-content:center; font-size:22px; } .add-tile:hover{ border-color:var(--gold); color:var(--gold); } /* MODAL */ .overlay{ position:fixed; inset:0; background:rgba(10,20,22,.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; } .modal{ background:var(--paper); border-radius:14px; width:100%; max-width:520px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 30px 60px rgba(0,0,0,.4); } .modal-head{ padding:16px 20px 12px; border-bottom:1px solid rgba(0,0,0,.08); display:flex; justify-content:space-between; align-items:flex-start; gap:10px; background:var(--paper-alt); } .modal-head h3{ font-family:var(--font-display); font-weight:500; font-size:20px; margin:0; } .modal-head .sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; } .icon-btn{ border:none; background:transparent; font-size:20px; color:var(--ink-soft); padding:2px 6px; } .tabs{ display:flex; gap:2px; padding:10px 16px 0; background:var(--paper-alt); overflow-x:auto; } .tab{ font-size:12.5px; font-weight:500; padding:8px 12px; border:none; background:transparent; color:var(--ink-soft); border-radius:8px 8px 0 0; white-space:nowrap; } .tab.active{ background:var(--paper); color:var(--ink); font-weight:600; } .tab-content{ padding:16px 20px 20px; overflow-y:auto; } .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-bottom:14px; } .field label{ display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; } .field input, .field select, .field textarea, select, textarea{ width:100%; padding:8px 10px; border-radius:7px; border:1px solid #cfc6ac; font-size:13.5px; background:#fff; color:var(--ink); } textarea{ resize:vertical; min-height:56px; } select option { color: #000 !important; background: #fff !important; } .status-pills{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; } .pill{ font-size:12px; padding:6px 12px; border-radius:999px; cursor:pointer; border:1.5px solid transparent; background:#fff; color:var(--ink-soft); } .pill.sel{ color:#fff; } .log-form{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; } .log-form input, .log-form select{ padding:8px 9px; border-radius:6px; border:1px solid #cfc6ac; font-size:13px; background:#fff; } .log-form .full{ grid-column:1/-1; } .log-form button{ grid-column:1/-1; } .log-list{ list-style:none; margin:0; padding:0; border-top:1px solid rgba(0,0,0,.08); } .log-list li{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dotted rgba(0,0,0,.12); font-size:13px; } .log-list .d{ font-family:var(--font-mono); color:var(--ink-soft); font-size:11.5px; white-space:nowrap; } .log-list .v{ font-weight:600; } .log-list .rm{ background:none; border:none; color:var(--sick); font-size:12px; } .empty-log{ color:var(--ink-soft); padding:10px 0; } .save-row{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; } .zone-row{ display:flex; gap:8px; margin-bottom:10px; align-items:flex-end; } .zone-row .field{ flex:1; } .zone-preview-list{ margin:2px 0 14px; } .zone-chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; background:#fff; border-radius:999px; padding:4px 10px 4px 6px; margin:0 6px 6px 0; } .zone-chip .sw{ width:10px; height:10px; border-radius:50%; } .zone-chip button{ border:none; background:none; color:var(--sick); } /* FOOD */ .food-card{ background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; padding:12px; margin-bottom:12px; } .food-price{ color:var(--ready); font-family:var(--font-mono); font-weight:700; font-size:14px; margin-top:4px; } .price-note{ font-size:11px; color:var(--ink-soft); margin-top:3px; } /* SUMMARY */ .summary-card{ border:1px solid rgba(0,0,0,.1); border-radius:10px; padding:14px 16px; margin-bottom:12px; background:#fff; } .summary-card h4{ margin:0; font-family:var(--font-display); font-size:17px; } /* EMPTY */ .empty-state{ position:relative; z-index:1; margin:60px auto; max-width:460px; background:rgba(239,233,218,.95); border-radius:14px; padding:28px 26px; box-shadow:0 20px 40px rgba(0,0,0,.3); } .empty-state h2{ font-family:var(--font-display); font-weight:500; margin:0 0 6px; font-size:22px; } .empty-state p{ color:var(--ink-soft); font-size:13.5px; margin:0 0 16px; line-height:1.6; } .modal-footer { padding: 12px 20px; border-top: 1px solid rgba(0,0,0,.08); background: var(--paper-alt); display: flex; justify-content: flex-end; gap: 10px; } @media(max-width:600px){ .banner{ flex-wrap:wrap; } .total-badge{ margin-left:auto; } .grid-2{ grid-template-columns:1fr; } .zone-row{ flex-wrap:wrap; } .log-form{ grid-template-columns:1fr; } .log-form .full, .log-form button{ grid-column:auto; } } @media(max-width:520px){ .overlay{ align-items:flex-end; padding:0; } .modal{ max-height:94vh; border-radius:12px 12px 0 0; } } /* LOGIN OVERLAY CSS */ #loginOverlay { position: fixed; inset: 0; background: radial-gradient(120% 140% at 15% -10%,rgba(46,110,120,.95),rgba(18,42,49,.98)); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; } .login-box { background: var(--paper); padding: 35px 30px; border-radius: 14px; width: 100%; max-width: 360px; box-shadow: 0 30px 60px rgba(0,0,0,.5); text-align: center; border: 2px solid var(--gold); } .login-box h2 { font-family: var(--font-display); font-weight: 500; margin: 0 0 8px; color: var(--ink); font-size: 24px; } .login-box p { color: var(--ink-soft); font-size: 14px; margin: 0 0 20px; } .login-box input { width: 100%; padding: 12px; font-size: 24px; text-align: center; letter-spacing: 8px; border-radius: 8px; border: 1px solid #cfc6ac; margin-bottom: 20px; background: #fff; color: var(--ink); } .login-box input:focus { outline: 2px solid var(--gold); } </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>เข้าสู่ระบบผังกระชัง</h2>
+        <p>กรุณาระบุรหัสผ่านเพื่อเข้าใช้งาน</p>
+        <input type="password" id="pinInput" placeholder="****" maxlength="6">
+        <button class="btn primary" id="loginBtn" style="width:100%; font-size:16px; padding:12px;">เข้าสู่ระบบ</button>
+        <p id="loginError" style="color:var(--sick); font-size:13px; margin-top:12px; display:none;">รหัสผ่านไม่ถูกต้อง!</p>
+    </div>
+</div>
+
+<div class="app" id="app"></div>
+<script> (function(){ 
+
+/* ========================================================= LOGIN SYSTEM ========================================================= */
+const SYSTEM_PASSWORD = "888"; // <--- กำหนดรหัสผ่านตรงนี้ (ปัจจุบันคือ 888)
+
+const loginOverlay = document.getElementById("loginOverlay");
+const pinInput = document.getElementById("pinInput");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
+
+// ตรวจสอบว่าเคยล็อคอินใน Session นี้หรือยัง
+if (sessionStorage.getItem("isLoggedIn") === "true") {
+    loginOverlay.style.display = "none";
+}
+
+loginBtn.addEventListener("click", () => {
+    if (pinInput.value === SYSTEM_PASSWORD) {
+        sessionStorage.setItem("isLoggedIn", "true");
+        loginOverlay.style.display = "none";
+    } else {
+        loginError.style.display = "block";
+        pinInput.value = "";
+        pinInput.focus();
+    }
+});
+
+pinInput.addEventListener("keyup", (e) => {
+    if(e.key === "Enter") loginBtn.click();
+    loginError.style.display = "none";
+});
+
+/* ========================================================= SETTINGS ========================================================= */ const STORE_KEY = "tilapia-farm-state-v3"; /* รายการอาหาร */ const FEEDS = { "1710": 595, "7710S": 600, "5932T": 584, "9950": 686, "9951T": 706 }; const STATUS = { ok:{ label:"ปกติ", hex:"#5B7F4A" }, watch:{ label:"ต้องดูแล", hex:"#C79A3E" }, ready:{ label:"พร้อมจับ", hex:"#A9552E" }, sick:{ label:"ป่วย", hex:"#A63B32" }, empty:{ label:"ว่าง", hex:"#84908F" } }; const DEFAULT_ZONE_COLORS = [ "#2F6B3E", "#7A2020", "#1F3A66", "#7A5A1F", "#3D2E63", "#1F6B66" ]; let state = null; let activeCageId = null; let activeTab = "general"; let statusFilter = ""; let zoneManagerOpen = false; let batchSummaryOpen = false; const app = document.getElementById("app"); /* ========================================================= STORAGE ========================================================= */ function save(){ try{ localStorage.setItem( STORE_KEY, JSON.stringify(state) ); }catch(e){ console.error("บันทึกข้อมูลไม่สำเร็จ",e); } } function load(){ try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ state = JSON.parse(raw); } }catch(e){ console.error(e); } if(!state){ state = seedState(); } normalizeState(); render(); } /* ========================================================= INITIAL DATA ========================================================= */ function seedState(){ const zones = [ { id:"zC", name:"C", color:"#2F6B3E" }, { id:"zA", name:"A", color:"#7A2020" }, { id:"zB", name:"B", color:"#1F3A66" } ]; const cages = []; let nid = 1; zones.forEach(z=>{ const count = z.id==="zC" ? 12 : z.id==="zA" ? 18 : 27; for(let i=1;i<=count;i++){ cages.push( newCage( "c"+(nid++), z.id, z.name+i ) ); } }); return { farmName:"แผนผังกระชังปลาทับทิม", zones, cages, nextId:nid, nextZoneId:4 }; } function newCage(id,zoneId,code){ return { id, zoneId, code, batch:"", price:null, stockDate:"", initialCount:null, initialWeight:null, currentCount:null, latestAvgWeight:null, netSize:"", status:"empty", notes:"", logs:[] }; } function normalizeState(){ if(!state.zones) state.zones=[]; if(!state.cages) state.cages=[]; if(!state.nextId){ state.nextId = state.cages.length+1; } if(!state.nextZoneId){ state.nextZoneId = state.zones.length+1; } const zoneB = state.zones.find(z => z.name === "B"); if (zoneB) { const cagesB = state.cages.filter(c => c.zoneId === zoneB.id); if (cagesB.length === 24) { for(let i=25; i<=27; i++){ state.cages.push(newCage("c"+(state.nextId++), zoneB.id, "B"+i)); } } } state.cages.forEach(c=>{ if(!Array.isArray(c.logs)){ c.logs=[]; } if(!c.status){ c.status="empty"; } if(c.netSize === undefined){ c.netSize = ""; } }); } /* ========================================================= HELPERS ========================================================= */ function cageById(id){ return state.cages.find(c=>c.id===id); } function zoneById(id){ return state.zones.find(z=>z.id===id); } function todayStr(){ return new Date() .toISOString() .slice(0,10); } function fmtDate(d){ if(!d) return "—"; const dt = new Date(d+"T00:00:00"); if(isNaN(dt)) return d; return dt.toLocaleDateString( "th-TH", { day:"numeric", month:"short", year:"2-digit" } ); } function daysSince(d){ if(!d) return null; const dt = new Date(d+"T00:00:00"); if(isNaN(dt)) return null; return Math.max( 0, Math.round( (Date.now()-dt.getTime()) /86400000 ) ); } function numOrNull(v){ if(v==="" || v==null){ return null; } const n=Number(v); return Number.isFinite(n) ? n : null; } function escapeHtml(s){ return String(s??"") .replace( /[&<>"']/g, m=>({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]) ); } /* ========================================================= TOTALS ========================================================= */ function totals(){ const cages = state.cages.length; const active = state.cages.filter( c=>c.status!=="empty" ).length; const fish = state.cages.reduce( (s,c)=>s+(c.currentCount||0), 0 ); const ready = state.cages.filter( c=>c.status==="ready" ).length; const sick = state.cages.filter( c=>c.status==="sick" ).length; const mortality = state.cages.reduce( (sum,c)=> sum+ (c.logs||[]) .filter( l=>l.type==="mortality" ) .reduce( (a,l)=>a+(l.value||0), 0 ), 0 ); const feedCost = state.cages.reduce( (sum,c)=> sum+ (c.logs||[]) .filter(l=>l.type==="feed") .reduce( (a,l)=>a+(l.price||0), 0 ), 0 ); return { cages, active, fish, ready, sick, mortality, feedCost }; } /* ========================================================= MAIN RENDER ========================================================= */ function render(){ app.innerHTML = bannerHTML()+ statsHTML()+ controlsHTML()+ layoutHTML(); bindBanner(); bindControls(); bindCages(); if(zoneManagerOpen){ openZoneManager(); } if(batchSummaryOpen){ openBatchSummary(); } } /* ========================================================= HEADER ========================================================= */ function bannerHTML(){ const t=totals(); return ` <div class="banner"> <svg class="fence" width="46" height="34" viewBox="0 0 46 34" fill="none"> <rect x="1" y="1" width="44" height="32" rx="3" stroke="#C79A3E" stroke-width="2"/> <line x1="1" y1="13" x2="45" y2="13" stroke="#C79A3E" stroke-width="1.5"/> <line x1="12" y1="1" x2="12" y2="33" stroke="#C79A3E" stroke-width="1.5"/> <line x1="23" y1="1" x2="23" y2="33" stroke="#C79A3E" stroke-width="1.5"/> <line x1="34" y1="1" x2="34" y2="33" stroke="#C79A3E" stroke-width="1.5"/> </svg> <div class="banner-title"> <h1 class="farm-name" id="farmName" contenteditable="true" spellcheck="false" > ${escapeHtml(state.farmName)} </h1> <p class="farm-sub"> ปลาทับทิมไซส์เล็ก · แม่น้ำน่าน · แตะที่กระชังเพื่อดู/บันทึกข้อมูล </p> </div> <div class="total-badge"> <div class="l"> จำนวนทั้งหมด </div> <div class="n"> ${t.cages} <span>กระชัง</span> </div> </div> </div> `; } /* ========================================================= STATS ========================================================= */ function statsHTML(){ const t=totals(); const stats=[ [t.active,"กระชังที่มีปลา"], [ t.fish.toLocaleString("th-TH"), "จำนวนปลารวม (ตัว)" ], [t.ready,"พร้อมจับ"], [t.sick,"ต้องดูแล/ป่วย"], [ t.mortality.toLocaleString("th-TH"), "ปลาตายสะสม (ตัว)" ], [ t.feedCost.toLocaleString("th-TH"), "ค่าอาหารสะสม (บาท)" ] ]; return ` <div class="stats-row"> ${stats.map( ([n,l])=>` <div class="stat"> <div class="n">${n}</div> <div class="l">${l}</div> </div> ` ).join("")} </div> `; } /* ========================================================= CONTROLS ========================================================= */ function controlsHTML(){ return ` <div class="controls"> <button class="btn primary" id="manageZonesBtn"> จัดการโซน / เพิ่มกระชัง </button> <button class="btn" id="batchSummaryBtn"> สรุปตามรุ่น </button> <button class="btn" id="viewAllBtn" style="${ statusFilter==="" ?"background:rgba(199,154,62,.25);border-color:var(--gold);" :"" }"> ดูกระชังทั้งหมด </button> <select class="btn" id="filterStatus"> <option value=""> แสดงทุกสถานะ </option> ${ Object.entries(STATUS) .map( ([k,v])=>` <option value="${k}" ${statusFilter===k?"selected":""}> ${v.label} </option> ` ) .join("") } </select> <button class="btn danger" id="resetBtn"> ล้างผังทั้งหมด </button> </div> `; } /* ========================================================= LAYOUT ========================================================= */ function layoutHTML(){ const filter=statusFilter; const shown = state.cages.filter( c=>!filter || c.status===filter ).length; return ` ${ filter ?` <p style=" position:relative; z-index:1; margin:0 20px; color:#B9C7C6; font-size:12.5px; "> แสดง ${shown} จาก ${state.cages.length} กระชัง (${STATUS[filter]?.label||""}) </p> ` :"" } <div class="layout"> ${ state.zones.map(z=>{ const cages = state.cages.filter( c=> c.zoneId===z.id && (!filter || c.status===filter) ); if(filter && cages.length===0){ return ""; } return ` <div class="zone-block"> <p class="zone-label" style="--zone-color:${z.color}" > <span class="dot"></span> โซน ${escapeHtml(z.name)} · ${ state.cages.filter( c=>c.zoneId===z.id ).length } กระชัง <span class="line"></span> </p> <div class="walkway"> ${ (() => { let html = ""; let rowLimit = z.name === "B" ? 9 : 6; let currentCount = 0; cages.forEach((c, idx) => { html += cageCardHTML(c,z); currentCount++; if(currentCount === rowLimit && idx !== cages.length - 1){ html += '<div style="flex-basis: 100%; height: 0; margin: 0; padding: 0;"></div>'; currentCount = 0; } }); if(!filter){ html += `<button class="add-tile" data-addzone="${z.id}"> + </button>`; } return html; })() } </div> </div> `; }).join("") } </div> `; } /* ========================================================= CAGE CARD ========================================================= */ function cageCardHTML(c,z){ const st = STATUS[c.status] || STATUS.empty; const days = daysSince(c.stockDate); return ` <button class="cage" data-id="${c.id}" style="--zone-color:${z.color}" > <div class="cage-top"> <span class="code"> ${escapeHtml(c.code)} </span> <span class="status-dot" style="--status-color:${st.hex}" title="${st.label}"> </span> </div> <div class="cage-body"> ${ c.batch ?` <div class="cage-line"> <span>รุ่น</span> <b>${escapeHtml(c.batch)}</b> </div> ` :"" } <div class="cage-line"> <span>ปลา</span> <b> ${ c.currentCount!=null ?c.currentCount.toLocaleString("th-TH") :"—" } </b> </div> <div class="cage-line"> <span>น้ำหนัก</span> <b> ${ c.latestAvgWeight!=null ?c.latestAvgWeight+" ก." :"—" } </b> </div> <div class="cage-line"> <span>ตาร่อน</span> <b> ${ c.netSize ? escapeHtml(c.netSize) :"—" } </b> </div> <div class="cage-line"> <span>อายุ</span> <b> ${ days!=null ?days+" วัน" :"—" } </b> </div> </div> </button> `; } /* ========================================================= BIND MAIN ========================================================= */ function bindBanner(){ const el= document.getElementById("farmName"); if(!el) return; el.addEventListener( "blur", ()=>{ state.farmName = el.textContent.trim() || "แผนผังกระชังปลาทับทิม"; save(); } ); } function bindControls(){ document .getElementById("manageZonesBtn") ?.addEventListener( "click", ()=>{ zoneManagerOpen=true; openZoneManager(); } ); document .getElementById("batchSummaryBtn") ?.addEventListener( "click", ()=>{ batchSummaryOpen=true; openBatchSummary(); } ); document .getElementById("viewAllBtn") ?.addEventListener( "click", ()=>{ statusFilter=""; render(); } ); document .getElementById("filterStatus") ?.addEventListener( "change", e=>{ statusFilter=e.target.value; render(); } ); document .getElementById("resetBtn") ?.addEventListener( "click", ()=>{ if( confirm( "ล้างผังกระชังทั้งหมด?\n\nข้อมูลทั้งหมดจะถูกลบถาวร" ) ){ state={ farmName:state.farmName, zones:[], cages:[], nextId:1, nextZoneId:1 }; save(); render(); } } ); } function bindCages(){ document .querySelectorAll(".cage") .forEach(btn=>{ btn.addEventListener( "click", ()=>{ openModal( btn.dataset.id, "general" ); } ); }); document .querySelectorAll("[data-addzone]") .forEach(btn=>{ btn.addEventListener( "click", ()=>{ const z = zoneById( btn.dataset.addzone ); const count = state.cages.filter( c=>c.zoneId===z.id ).length; const c = newCage( "c"+(state.nextId++), z.id, z.name+(count+1) ); state.cages.push(c); save(); render(); openModal(c.id,"general"); } ); }); } /* ========================================================= ADD ZONE ========================================================= */ function addZone( name, color, count ){ const id = "z"+(state.nextZoneId++); state.zones.push({ id, name, color }); for( let i=1; i<=count; i++ ){ state.cages.push( newCage( "c"+(state.nextId++), id, name+i ) ); } save(); } /* ========================================================= ZONE MANAGER ========================================================= */ function openZoneManager(){ let overlay= document.querySelector(".overlay"); if(!overlay){ overlay= document.createElement("div"); overlay.className="overlay"; document.body.appendChild( overlay ); overlay.addEventListener( "click", e=>{ if(e.target===overlay){ closeZoneManager(); } } ); } overlay.innerHTML= zoneManagerHTML(); bindZoneManager(); } function closeZoneManager(){ zoneManagerOpen=false; document .querySelector(".overlay") ?.remove(); } function zoneManagerHTML(){ const nextColor = DEFAULT_ZONE_COLORS[ state.zones.length % DEFAULT_ZONE_COLORS.length ]; return ` <div class="modal" style="max-width:460px" > <div class="modal-head"> <div> <h3>จัดการโซน</h3> <div class="sub"> เพิ่ม/ลบโซนและจำนวนกระชัง </div> </div> <button class="icon-btn" id="closeZM"> ✕ </button> </div> <div class="tab-content"> <div class="zone-preview-list" id="zoneChips"> ${ state.zones.length ?state.zones.map( z=>` <span class="zone-chip"> <span class="sw" style="background:${z.color}"> </span> ${escapeHtml(z.name)} (${state.cages.filter( c=>c.zoneId===z.id ).length}) <button data-delzone="${z.id}"> ✕ </button> </span> ` ).join("") :` <span style=" font-size:12.5px; color:var(--ink-soft) "> ยังไม่มีโซน </span> ` } </div> <p style=" margin:0 0 8px; color:var(--ink-soft); font-size:12.5px; "> เพิ่มโซนใหม่ </p> <div class="zone-row"> <div class="field"> <label>ชื่อโซน</label> <input type="text" id="zmName" placeholder="เช่น D" maxlength="8"> </div> <div class="field" style="flex:0 0 60px"> <label>สี</label> <input type="color" id="zmColor" value="${nextColor}" style=" width:44px; height:37px; padding:2px; "> </div> <div class="field"> <label>จำนวนกระชัง</label> <input type="number" id="zmCount" min="1" max="100" value="6"> </div> </div> <div class="save-row"> <button class="btn primary" id="zmAdd"> + เพิ่มโซน </button> </div> </div> </div> `; } function bindZoneManager(){ document .getElementById("closeZM") ?.addEventListener( "click", closeZoneManager ); document .getElementById("zmAdd") ?.addEventListener( "click", ()=>{ const name= document .getElementById("zmName") .value .trim(); if(!name){ alert("กรุณาใส่ชื่อโซน"); return; } const color= document .getElementById("zmColor") .value; const count= Math.max( 1, parseInt( document .getElementById("zmCount") .value )||1 ); addZone( name, color, count ); openZoneManager(); render(); } ); document .querySelectorAll("[data-delzone]") .forEach(btn=>{ btn.addEventListener( "click", ()=>{ const z= zoneById( btn.dataset.delzone ); const n= state.cages.filter( c=>c.zoneId===z.id ).length; if( confirm( `ลบโซน ${z.name} พร้อมกระชัง ${n} ใบ?\n\nข้อมูลกระชังจะหายถาวร` ) ){ state.cages= state.cages.filter( c=>c.zoneId!==z.id ); state.zones= state.zones.filter( zz=>zz.id!==z.id ); save(); openZoneManager(); render(); } } ); }); } /* ========================================================= BATCH SUMMARY ========================================================= */ function computeBatchSummaries(){ const map={}; state.cages.forEach(c=>{ const b= (c.batch||"").trim(); if(!b) return; if(!map[b]){ map[b]={ batch:b, cages:[], totalInitial:0, totalCurrent:0, totalBags:0, totalFeedPrice:0, totalMortality:0, feedTypes:new Set() }; } const g=map[b]; g.cages.push(c); g.totalInitial += c.initialCount||0; g.totalCurrent += c.currentCount||0; (c.logs||[]).forEach(l=>{ if(l.type==="feed"){ g.totalBags += l.bags||0; g.totalFeedPrice += l.price||0; if(l.feedType){ g.feedTypes.add( l.feedType ); } } if(l.type==="mortality"){ g.totalMortality += l.value||0; } }); }); return Object.values(map) .sort( (a,b)=> a.batch.localeCompare( b.batch, "th" ) ); } function openBatchSummary(){ let overlay= document.querySelector(".overlay"); if(!overlay){ overlay= document.createElement("div"); overlay.className="overlay"; document.body.appendChild( overlay ); overlay.addEventListener( "click", e=>{ if(e.target===overlay){ closeBatchSummary(); } } ); } overlay.innerHTML= batchSummaryHTML(); document .getElementById( "closeBatchSummary" ) ?.addEventListener( "click", closeBatchSummary ); } function closeBatchSummary(){ batchSummaryOpen=false; document .querySelector(".overlay") ?.remove(); } function batchSummaryHTML(){ const groups= computeBatchSummaries(); return ` <div class="modal" style="max-width:680px" > <div class="modal-head"> <div> <h3>สรุปตามรุ่น</h3> <div class="sub"> ภาพรวมกระชัง อาหาร และปลาตาย แยกตามรุ่นปลา </div> </div> <button class="icon-btn" id="closeBatchSummary"> ✕ </button> </div> <div class="tab-content"> ${ groups.length===0 ?` <p style=" font-size:13px; color:var(--ink-soft) "> ยังไม่มีการระบุรุ่นปลา กรุณาไปกรอกที่แท็บ "ข้อมูลรุ่น" </p> ` :groups.map( g=>` <div class="summary-card"> <div style=" display:flex; justify-content:space-between; margin-bottom:6px; "> <h4> รุ่น ${escapeHtml(g.batch)} </h4> <span style=" font-size:12px; color:var(--ink-soft) "> ${g.cages.length} กระชัง </span> </div> <div style=" font-size:12.5px; color:var(--ink-soft); margin-bottom:10px; "> กระชัง: ${g.cages .map( c=>escapeHtml(c.code) ) .join(", ")} </div> <div class="grid-2"> <div> จำนวนที่ลง <b> ${g.totalInitial.toLocaleString("th-TH")} </b> ตัว </div> <div> คงเหลือ <b> ${g.totalCurrent.toLocaleString("th-TH")} </b> ตัว </div> <div> ปลาตายรวม <b> ${g.totalMortality.toLocaleString("th-TH")} </b> ตัว </div> <div> อาหารรวม <b> ${g.totalBags.toLocaleString("th-TH")} </b> ถุง </div> <div> ค่าอาหาร <b> ${g.totalFeedPrice.toLocaleString("th-TH")} </b> บาท </div> <div> อาหารที่ใช้ <b> ${ g.feedTypes.size ?[...g.feedTypes] .map(escapeHtml) .join(", ") :"—" } </b> </div> </div> </div> ` ).join("") } </div> </div> `; } /* ========================================================= CAGE MODAL ========================================================= */ function openModal(id,tab){ activeCageId=id; activeTab=tab||"general"; const c= cageById(id); if(!c){ activeCageId=null; return; } let overlay= document.querySelector(".overlay"); if(!overlay){ overlay= document.createElement("div"); overlay.className="overlay"; document.body.appendChild( overlay ); overlay.addEventListener( "click", e=>{ if(e.target===overlay){ closeModal(); } } ); } overlay.innerHTML= modalHTML(c); bindModal(c); } function closeModal(){ activeCageId=null; document .querySelector(".overlay") ?.remove(); } function modalHTML(c){ const z= zoneById(c.zoneId); const days= daysSince(c.stockDate); return ` <div class="modal"> <div class="modal-head"> <div> <h3> กระชัง ${escapeHtml(c.code)} ${ c.batch ?` <span style=" font-size:14px; color:var(--ink-soft) "> · รุ่น ${escapeHtml(c.batch)} </span> ` :"" } </h3> <div class="sub"> โซน ${escapeHtml(z?.name||"—")} ${ days!=null ?` · เลี้ยงมา ${days} วัน` :"" } </div> </div> <button class="icon-btn" id="closeModal"> ✕ </button> </div> <div class="tabs"> ${tabBtn("general","ทั่วไป")} ${tabBtn("batch","ข้อมูลรุ่น")} ${tabBtn("feed","ให้อาหาร")} ${tabBtn("mortality","ปลาตาย")} ${tabBtn("sampling","สุ่มชั่ง")} </div> <div class="tab-content" id="tabContent"> ${tabContentHTML(c)} </div> <div class="modal-footer"> <button class="btn danger" id="deleteCageGlobal" style="margin-right:auto;">ลบกระชังนี้</button> <button class="btn primary" id="saveAllGlobal" style="padding: 8px 24px;">บันทึกข้อมูล</button> </div> </div> `; } function tabBtn(key,label){ return ` <button class="tab ${activeTab===key?"active":""}" data-tab="${key}"> ${label} </button> `; } function tabContentHTML(c){ if(activeTab==="general"){ return generalTab(c); } if(activeTab==="batch"){ return batchTab(c); } if(activeTab==="feed"){ return feedTab(c); } if(activeTab==="mortality"){ return logTab( c, "mortality", "บันทึกปลาตาย", "ตัว" ); } if(activeTab==="sampling"){ return samplingTab(c); } return ""; } /* ========================================================= GENERAL TAB ========================================================= */ function generalTab(c){ return ` <div class="status-pills" id="statusPills"> ${ Object.entries(STATUS) .map( ([k,v])=>` <button class="pill ${c.status===k?"sel":""}" data-status="${k}" style="${ c.status===k ?`background:${v.hex}; border-color:${v.hex};` :"" }"> ${v.label} </button> ` ).join("") } </div> <div class="grid-2"> <div class="field"> <label> จำนวนปลาปัจจุบัน (ตัว) </label> <input type="number" id="f_currentCount" value="${c.currentCount??""}"> </div> <div class="field"> <label> น้ำหนักเฉลี่ยล่าสุด (ก.) </label> <input type="number" step="0.1" id="f_latestAvgWeight" value="${c.latestAvgWeight??""}"> </div> <div class="field"> <label> ตาร่อนเบอร์ </label> <input type="text" id="f_netSize" value="${escapeHtml(c.netSize||"")}" placeholder="เช่น เบอร์ 2"> </div> </div> `; } /* ========================================================= BATCH TAB ========================================================= */ function batchTab(c){ return ` <p style=" margin:0 0 10px; color:var(--ink-soft); font-size:12.5px; "> ข้อมูลรุ่นปลาที่ลงในกระชังนี้ </p> <div class="grid-2"> <div class="field"> <label>รุ่น</label> <input type="text" id="b_batch" placeholder="เช่น รุ่น 1/2569" value="${escapeHtml(c.batch||"")}"> </div> <div class="field"> <label>วันที่รับเข้า</label> <input type="date" id="b_stockDate" value="${c.stockDate||""}"> </div> <div class="field"> <label>จำนวน (ตัว)</label> <input type="number" id="b_initialCount" value="${c.initialCount??""}"> </div> <div class="field"> <label>ราคา (บาท)</label> <input type="number" step="0.01" id="b_price" value="${c.price??""}"> </div> <div class="field"> <label> น้ำหนักเริ่มต้น (ก./ตัว) </label> <input type="number" step="0.1" id="b_initialWeight" value="${c.initialWeight??""}"> </div> </div> <div class="field" style="margin-bottom:14px"> <label> หมายเหตุ </label> <textarea id="b_notes" style="min-height:120px" placeholder="เช่น วันที่ให้ยา อาการผิดปกติ ฯลฯ" >${escapeHtml(c.notes||"")}</textarea>
+</div>
+`; }
+/* =========================================================
+FEED TAB
+========================================================= */
+function feedTab(c){
+const logs=
+(c.logs||[])
+.filter(
+l=>l.type==="feed"
+)
+.sort(
+(a,b)=>
+b.date.localeCompare(a.date)
+);
+const totalBags=
+logs.reduce(
+(s,l)=>s+(l.bags||0),
+0
+);
+const totalPrice=
+logs.reduce(
+(s,l)=>s+(l.price||0),
+0
+);
+return `
+<p style=" margin:0 0 10px; color:var(--ink-soft); font-size:12.5px; "> บันทึกการเบิกอาหาร </p>
+<div class="food-card">
+<div class="field">
+
+  <label>
+    เลือกอาหาร
+  </label>
+
+  <select id="feed_type">
+
+    <option value="">
+      -- เลือกอาหาร --
+    </option>
+
+    ${
+      Object.entries(FEEDS)
+        .map(
+          ([name,price])=>`
+
+          <option
+            value="${name}"
+            data-price="${price}">
+
+            ${name}
+            ·
+            ${price.toLocaleString("th-TH")}
+            บาท/ถุง
+
+          </option>
+
+          `
+        ).join("")
+    }
+
+  </select>
+
+</div>
+
+<div
+  class="food-price"
+  id="selectedFeedPrice">
+  ราคา — บาท/ถุง
+</div>
+
+<div class="price-note">
+  ราคาตั้งต้นตามรายการอาหารที่กำหนด
+</div>
+</div>
+<div class="log-form">
+<input
+  type="date"
+  id="feed_date"
+  value="${todayStr()}">
+
+<input
+  type="number"
+  id="feed_bags"
+  placeholder="จำนวนถุง"
+  min="0"
+  step="1">
+
+<input
+  type="number"
+  id="feed_price"
+  placeholder="ราคารวม"
+  min="0"
+  step="0.01">
+
+<input
+  type="text"
+  id="feed_note"
+  class="full"
+  placeholder="หมายเหตุ (ถ้ามี)">
+
+<button
+  class="btn primary"
+  id="addFeedLog">
+  + เพิ่มรายการอาหาร
+</button>
+</div>
+<p style=" font-size:12px; color:var(--ink-soft); margin:0 0 8px; ">
+รวมสะสม:
+${totalBags.toLocaleString("th-TH")}
+ถุง
+
+·
+
+${totalPrice.toLocaleString("th-TH")}
+บาท
+</p>
+<ul class="log-list" id="logList">
+${
+  logs.length===0
+
+  ?`
+  <li class="empty-log">
+    ยังไม่มีบันทึกอาหาร
+  </li>
+  `
+
+  :logs.map(
+    l=>`
+
+    <li>
+
+      <span class="d">
+        ${fmtDate(l.date)}
+      </span>
+
+      <span class="v">
+
+        ${
+          (l.bags||0)
+            .toLocaleString("th-TH")
+        }
+        ถุง
+
+        ·
+
+        ${escapeHtml(l.feedType||"")}
+
+      </span>
+
+      <span
+        style="
+          flex:1;
+          color:var(--ink-soft)
+        ">
+
+        ${
+          l.price
+          ?l.price.toLocaleString("th-TH")+" บ. "
+          :""
+        }
+
+        ${escapeHtml(l.note||"")}
+
+      </span>
+
+      <button
+        class="rm"
+        data-log="${l.id}">
+        ลบ
+      </button>
+
+    </li>
+
+    `
+  ).join("")
+}
+</ul> `; }
+/* =========================================================
+MORTALITY / LOG
+========================================================= */
+function logTab(
+c,
+type,
+title,
+unit
+){
+const logs=
+(c.logs||[])
+.filter(
+l=>l.type===type
+)
+.sort(
+(a,b)=>
+b.date.localeCompare(a.date)
+);
+const total=
+logs.reduce(
+(s,l)=>s+(l.value||0),
+0
+);
+return `
+<p style=" margin:0 0 10px; color:var(--ink-soft); font-size:12.5px; "> ${title} </p>
+${
+type==="mortality"
+? `<div style=" background:#fff; border-radius:8px; padding:10px; margin-bottom:12px; font-size:13px; "> ปลาตายสะสม: <b> ${total.toLocaleString("th-TH")} </b> ตัว </div>`
+:""
+}
+<div class="log-form">
+<input
+  type="date"
+  id="log_date"
+  value="${todayStr()}">
+
+<input
+  type="number"
+  id="log_value"
+  placeholder="${unit}"
+  step="1">
+
+<input
+  type="text"
+  id="log_note"
+  class="full"
+  placeholder="หมายเหตุ (ถ้ามี)">
+
+<button
+  class="btn primary"
+  id="addLog">
+  + เพิ่ม
+</button>
+</div>
+<ul class="log-list">
+${
+  logs.length===0
+
+  ?`
+  <li class="empty-log">
+    ยังไม่มีบันทึก
+  </li>
+  `
+
+  :logs.map(
+    l=>`
+
+    <li>
+
+      <span class="d">
+        ${fmtDate(l.date)}
+      </span>
+
+      <span class="v">
+        ${l.value}
+        ${unit}
+      </span>
+
+      <span
+        style="
+          flex:1;
+          color:var(--ink-soft)
+        ">
+        ${escapeHtml(l.note||"")}
+      </span>
+
+      <button
+        class="rm"
+        data-log="${l.id}">
+        ลบ
+      </button>
+
+    </li>
+
+    `
+  ).join("")
+}
+</ul> `; }
+/* =========================================================
+SAMPLING
+========================================================= */
+function samplingTab(c){
+const logs=
+(c.logs||[])
+.filter(
+l=>l.type==="sampling"
+)
+.sort(
+(a,b)=>
+a.date.localeCompare(b.date)
+);
+return `
+<p style=" margin:0 0 10px; color:var(--ink-soft); font-size:12.5px; "> สุ่มชั่งน้ำหนักเฉลี่ย </p>
+<div class="log-form">
+<input
+  type="date"
+  id="log_date"
+  value="${todayStr()}">
+
+<input
+  type="number"
+  id="log_value"
+  placeholder="ก./ตัว"
+  step="0.1">
+
+<input
+  type="text"
+  id="log_note"
+  class="full"
+  placeholder="หมายเหตุ">
+
+<button
+  class="btn primary"
+  id="addLog">
+  + เพิ่ม
+</button>
+</div>
+${
+logs.length>=2
+?growthChartSVG(logs)
+:""
+}
+<ul class="log-list">
+${
+  logs.length===0
+
+  ?`
+  <li class="empty-log">
+    ยังไม่มีบันทึก
+  </li>
+  `
+
+  :logs
+    .slice()
+    .reverse()
+    .map(
+      l=>`
+
+      <li>
+
+        <span class="d">
+          ${fmtDate(l.date)}
+        </span>
+
+        <span class="v">
+          ${l.value} ก.
+        </span>
+
+        <span
+          style="
+            flex:1;
+            color:var(--ink-soft)
+          ">
+          ${escapeHtml(l.note||"")}
+        </span>
+
+        <button
+          class="rm"
+          data-log="${l.id}">
+          ลบ
+        </button>
+
+      </li>
+
+      `
+    ).join("")
+}
+</ul> `; }
+/* =========================================================
+CHART
+========================================================= */
+function growthChartSVG(logs){
+const w=460;
+const h=130;
+const pad=30;
+const vals=
+logs.map(l=>l.value);
+const min=Math.min(...vals);
+const max=Math.max(...vals);
+const range=
+(max-min)||1;
+const stepX=
+(w-pad*2)/
+(logs.length-1||1);
+const pts=
+logs.map(
+(l,i)=>{
+    const x=
+      pad+i*stepX;
+
+    const y=
+      h-pad-
+      ((l.value-min)/range)*
+      (h-pad*2);
+
+    return [x,y];
+  }
+);
+const path=
+pts.map(
+(p,i)=>
+(i===0?"M":"L")+
+p[0].toFixed(1)+","+
+p[1].toFixed(1)
+).join(" ");
+const dots=
+pts.map(
+p=> `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#A9552E"/>`
+).join("");
+return `
+<div style=" background:#fff; border-radius:10px; padding:8px; margin-bottom:12px; ">
+<svg
+  viewBox="0 0 ${w} ${h}"
+  style="
+    width:100%;
+    height:${h}px;
+  ">
+
+  <path
+    d="${path}"
+    fill="none"
+    stroke="#A9552E"
+    stroke-width="2.5"/>
+
+  ${dots}
+
+  <text
+    x="${pad}"
+    y="${h-7}"
+    font-size="10"
+    fill="#4E5E5D">
+    ${min} ก.
+  </text>
+
+  <text
+    x="${w-pad}"
+    y="${h-7}"
+    font-size="10"
+    fill="#4E5E5D"
+    text-anchor="end">
+    ${max} ก.
+  </text>
+
+</svg>
+</div> `; }
+/* =========================================================
+BIND MODAL
+========================================================= */
+function bindModal(c){
+    document.getElementById("closeModal")?.addEventListener("click", closeModal);
+
+    function syncTabInputs() {
+        if (activeTab === "general") {
+            const fCC = document.getElementById("f_currentCount");
+            if(fCC) c.currentCount = numOrNull(fCC.value);
+            
+            const fLAW = document.getElementById("f_latestAvgWeight");
+            if(fLAW) c.latestAvgWeight = numOrNull(fLAW.value);
+            
+            const fNS = document.getElementById("f_netSize");
+            if(fNS) c.netSize = fNS.value.trim();
+        } else if (activeTab === "batch") {
+            const bB = document.getElementById("b_batch");
+            if(bB) c.batch = bB.value.trim();
+            
+            const bSD = document.getElementById("b_stockDate");
+            if(bSD) c.stockDate = bSD.value;
+            
+            const bIC = document.getElementById("b_initialCount");
+            if(bIC) {
+                c.initialCount = numOrNull(bIC.value);
+                if(c.currentCount == null && c.initialCount != null) {
+                    c.currentCount = c.initialCount;
+                }
+            }
+            
+            const bP = document.getElementById("b_price");
+            if(bP) c.price = numOrNull(bP.value);
+            
+            const bIW = document.getElementById("b_initialWeight");
+            if(bIW) c.initialWeight = numOrNull(bIW.value);
+            
+            const bN = document.getElementById("b_notes");
+            if(bN) c.notes = bN.value;
+        }
+    }
+
+    document.querySelectorAll(".tab").forEach(t => {
+        t.addEventListener("click", () => {
+            syncTabInputs(); // บันทึกข้อมูลที่กำลังพิมพ์ไว้ในความจำก่อนเปลี่ยนแท็บ
+            activeTab = t.dataset.tab;
+            openModal(c.id, activeTab);
+        });
+    });
+
+    document.getElementById("saveAllGlobal")?.addEventListener("click", () => {
+        syncTabInputs();
+        save();
+        render();
+        closeModal();
+    });
+
+    document.getElementById("deleteCageGlobal")?.addEventListener("click", () => {
+        if(confirm(`ลบกระชัง ${c.code} ?`)){
+            state.cages = state.cages.filter(x => x.id !== c.id);
+            save();
+            closeModal();
+            render();
+        }
+    });
+
+    /* GENERAL */
+    if(activeTab === "general"){
+        document.querySelectorAll("#statusPills .pill").forEach(p => {
+            p.addEventListener("click", () => {
+                syncTabInputs();
+                c.status = p.dataset.status;
+                openModal(c.id, "general");
+            });
+        });
+    }
+    /* FEED */
+    else if(activeTab === "feed"){
+        const feedSelect = document.getElementById("feed_type");
+        const priceInput = document.getElementById("feed_price");
+        const priceDisplay = document.getElementById("selectedFeedPrice");
+
+        function updateFeedPrice(){
+            const name = feedSelect.value;
+            const price = FEEDS[name];
+            if(price){
+                priceDisplay.textContent = `ราคา ${price.toLocaleString("th-TH")} บาท/ถุง`;
+                const bags = parseFloat(document.getElementById("feed_bags").value);
+                if(!isNaN(bags)){
+                    priceInput.value = (bags * price).toFixed(2);
+                }
+            } else {
+                priceDisplay.textContent = "ราคา — บาท/ถุง";
+            }
+        }
+
+        feedSelect?.addEventListener("change", updateFeedPrice);
+        document.getElementById("feed_bags")?.addEventListener("input", updateFeedPrice);
+
+        document.getElementById("addFeedLog")?.addEventListener("click", () => {
+            const date = document.getElementById("feed_date").value || todayStr();
+            const feedType = feedSelect.value;
+            const bags = parseFloat(document.getElementById("feed_bags").value);
+            const priceVal = parseFloat(priceInput.value);
+            const note = document.getElementById("feed_note").value;
+
+            if(!feedType) return alert("กรุณาเลือกอาหาร");
+            if(isNaN(bags) || bags <= 0) return alert("กรุณาระบุจำนวนถุง");
+
+            c.logs = c.logs || [];
+            c.logs.push({
+                id: "l" + Date.now() + Math.random().toString(16).slice(2),
+                type: "feed",
+                date,
+                feedType,
+                bags,
+                price: isNaN(priceVal) ? bags * FEEDS[feedType] : priceVal,
+                note
+            });
+            save();
+            openModal(c.id, "feed");
+            render();
+        });
+    }
+    /* MORTALITY / SAMPLING */
+    else {
+        document.getElementById("addLog")?.addEventListener("click", () => {
+            const date = document.getElementById("log_date").value || todayStr();
+            const value = parseFloat(document.getElementById("log_value").value);
+            const note = document.getElementById("log_note").value;
+
+            if(isNaN(value) || value <= 0) return alert("กรุณาระบุจำนวน");
+
+            c.logs = c.logs || [];
+            c.logs.push({
+                id: "l" + Date.now() + Math.random().toString(16).slice(2),
+                type: activeTab,
+                date,
+                value,
+                note
+            });
+
+            if(activeTab === "mortality" && c.currentCount != null){
+                c.currentCount = Math.max(0, c.currentCount - value);
+            }
+            if(activeTab === "sampling"){
+                c.latestAvgWeight = value;
+            }
+            
+            save();
+            openModal(c.id, activeTab);
+            render();
+        });
+    }
+
+    if(activeTab === "feed" || activeTab === "mortality" || activeTab === "sampling"){
+        bindRemoveLogs(c);
+    }
+}
+
+function bindRemoveLogs(c){
+    document.querySelectorAll(".rm").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const log = c.logs.find(l => l.id === btn.dataset.log);
+            if(!log) return;
+            if(!confirm("ลบบันทึกรายการนี้?")) return;
+            if(log.type === "mortality" && c.currentCount != null) {
+                c.currentCount += log.value || 0;
+            }
+            c.logs = c.logs.filter(l => l.id !== btn.dataset.log);
+            save();
+            openModal(c.id, activeTab);
+            render();
+        });
+    });
+}
+/* =========================================================
+START
+========================================================= */
+load();
+})();
+</script>
+</body> </html>
