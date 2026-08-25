@@ -7,7 +7,7 @@
   "theme_color": "#0288d1",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2980/2980649.png",
+    "src": "farm-logo.png"
       "sizes": "512x512",
       "type": "image/png"
     }
