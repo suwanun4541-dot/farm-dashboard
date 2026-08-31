@@ -33,6 +33,13 @@
         .total-badge .l{ font-size:10.5px; color:var(--ink-soft); }
         .total-badge .n{ font-family:var(--font-mono); font-weight:700; font-size:22px; line-height:1.15; }
         .total-badge .n span{ font-size:12px; font-weight:500; font-family:var(--font-body); }
+
+        /* SYNC BADGE */
+        .sync-badge{ flex:0 0 auto; font-family:var(--font-mono); font-size:11px; padding:7px 13px; border-radius:999px; border:1px solid rgba(239,233,218,.3); background:rgba(239,233,218,.08); color:#CBD6D5; cursor:pointer; white-space:nowrap; }
+        .sync-badge:hover{ background:rgba(239,233,218,.18); }
+        .sync-badge.ok{ border-color:#5B7F4A; color:#9FC98A; background:rgba(91,127,74,.15); }
+        .sync-badge.error{ border-color:#A63B32; color:#F3C7C2; background:rgba(166,59,50,.15); }
+        .sync-badge.syncing{ border-color:var(--gold); color:#F0D89A; background:rgba(199,154,62,.15); }
         
         /* STATS */
         .stats-row{ display:flex; gap:10px; flex-wrap:wrap; margin:18px 20px 6px; position:relative; z-index:1; }
@@ -210,17 +217,98 @@ const DEFAULT_ZONE_COLORS = [ "#2F6B3E", "#7A2020", "#1F3A66", "#7A5A1F", "#3D2E
 let state = null; let activeCageId = null; let activeTab = "general"; let statusFilter = ""; let zoneManagerOpen = false; let batchSummaryOpen = false;
 const app = document.getElementById("app");
 
+/* ========================================================= CLOUD SYNC ========================================================= */
+const GAS_URL_KEY = "tilapia-farm-gas-url";
+let gasUrl = localStorage.getItem(GAS_URL_KEY) || "";
+let syncStatus = "idle"; // idle | syncing | ok | error
+let lastSyncTime = null;
+let syncDebounce = null;
+let pollTimer = null;
+
+function getGasUrl(){ return localStorage.getItem(GAS_URL_KEY) || ""; }
+function setGasUrl(url){ localStorage.setItem(GAS_URL_KEY, url); gasUrl = url; }
+
+function syncBadgeInfo(){
+    if(!gasUrl) return { text:"☁ ยังไม่เชื่อมต่อคลาวด์ · แตะเพื่อตั้งค่า", cls:"" };
+    if(syncStatus==="syncing") return { text:"⏳ กำลังซิงก์...", cls:"syncing" };
+    if(syncStatus==="error") return { text:"⚠ ซิงก์ผิดพลาด · แตะเพื่อตรวจสอบ", cls:"error" };
+    if(syncStatus==="ok") return { text:"✅ ซิงก์แล้ว" + (lastSyncTime ? " " + lastSyncTime.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}) : ""), cls:"ok" };
+    return { text:"☁ เชื่อมต่อคลาวด์แล้ว", cls:"" };
+}
+function updateSyncBadgeDOM(){
+    const el = document.getElementById("syncBadge");
+    if(!el) return;
+    const s = syncBadgeInfo();
+    el.textContent = s.text;
+    el.className = "sync-badge " + s.cls;
+}
+
+async function cloudLoad(url){
+    const u = url || gasUrl;
+    if(!u) return null;
+    try{
+        syncStatus = "syncing"; updateSyncBadgeDOM();
+        const res = await fetch(u);
+        const json = await res.json();
+        if(json.ok){ syncStatus="ok"; lastSyncTime=new Date(); updateSyncBadgeDOM(); return json.data; }
+        throw new Error(json.error || "โหลดข้อมูลไม่สำเร็จ");
+    }catch(e){
+        console.error("cloudLoad error", e); syncStatus="error"; updateSyncBadgeDOM(); return null;
+    }
+}
+async function cloudSave(){
+    if(!gasUrl) return;
+    try{
+        syncStatus = "syncing"; updateSyncBadgeDOM();
+        const res = await fetch(gasUrl, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(state) });
+        const json = await res.json();
+        if(!json.ok) throw new Error(json.error || "บันทึกขึ้นคลาวด์ไม่สำเร็จ");
+        syncStatus="ok"; lastSyncTime=new Date(); updateSyncBadgeDOM();
+    }catch(e){
+        console.error("cloudSave error", e); syncStatus="error"; updateSyncBadgeDOM();
+    }
+}
+function startPolling(){
+    clearInterval(pollTimer);
+    if(!gasUrl) return;
+    pollTimer = setInterval(async ()=>{
+        if(document.querySelector(".overlay")) return; // ไม่รบกวนตอนกำลังแก้ไขข้อมูลอยู่
+        const cloudState = await cloudLoad();
+        if(cloudState && cloudState.cages){
+            state = cloudState;
+            try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+            normalizeState();
+            render();
+        }
+    }, 20000);
+}
+
 /* ========================================================= STORAGE ========================================================= */
 function save(){
     try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
     catch(e){ console.error("บันทึกข้อมูลไม่สำเร็จ",e); }
+    if(gasUrl){
+        clearTimeout(syncDebounce);
+        syncDebounce = setTimeout(cloudSave, 800);
+    }
 }
-function load(){
+async function load(){
     try{ const raw = localStorage.getItem(STORE_KEY); if(raw) state = JSON.parse(raw); }
     catch(e){ console.error(e); }
     if(!state) state = seedState();
     normalizeState();
     render();
+
+    if(gasUrl){
+        const cloudState = await cloudLoad();
+        if(cloudState && cloudState.cages){
+            state = cloudState;
+            try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+            normalizeState();
+            render();
+        }
+        startPolling();
+    }
 }
 
 /* ========================================================= INITIAL DATA ========================================================= */
@@ -326,6 +414,7 @@ function bannerHTML(){
             <div class="l"> จำนวนทั้งหมด </div>
             <div class="n"> ${t.cages} <span>กระชัง</span> </div>
         </div>
+        <button class="sync-badge ${syncBadgeInfo().cls}" id="syncBadge" title="แตะเพื่อตั้งค่าการซิงก์ข้อมูล">${syncBadgeInfo().text}</button>
     </div>
     `;
 }
@@ -358,6 +447,7 @@ function controlsHTML(){
             <option value=""> แสดงทุกสถานะ </option>
             ${ Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${statusFilter===k?"selected":""}>${v.label}</option>`).join("") }
         </select>
+        <button class="btn" id="settingsBtn"> ⚙ ตั้งค่าซิงก์คลาวด์ </button>
         <button class="btn danger" id="resetBtn"> ล้างผังทั้งหมด </button>
     </div>
     `;
@@ -426,14 +516,15 @@ function cageCardHTML(c,z){
 /* ========================================================= BIND MAIN ========================================================= */
 function bindBanner(){
     const el= document.getElementById("farmName");
-    if(!el) return;
-    el.addEventListener("blur", ()=>{ state.farmName = el.textContent.trim() || "แผนผังกระชังปลาทับทิม"; save(); });
+    if(el) el.addEventListener("blur", ()=>{ state.farmName = el.textContent.trim() || "แผนผังกระชังปลาทับทิม"; save(); });
+    document.getElementById("syncBadge")?.addEventListener("click", openSettingsModal);
 }
 function bindControls(){
     document.getElementById("manageZonesBtn")?.addEventListener("click", ()=>{ zoneManagerOpen=true; openZoneManager(); });
     document.getElementById("batchSummaryBtn")?.addEventListener("click", ()=>{ batchSummaryOpen=true; openBatchSummary(); });
     document.getElementById("viewAllBtn")?.addEventListener("click", ()=>{ statusFilter=""; render(); });
     document.getElementById("filterStatus")?.addEventListener("change", e=>{ statusFilter=e.target.value; render(); });
+    document.getElementById("settingsBtn")?.addEventListener("click", openSettingsModal);
     document.getElementById("resetBtn")?.addEventListener("click", ()=>{
         if( confirm("ล้างผังกระชังทั้งหมด?\n\nข้อมูลทั้งหมดจะถูกลบถาวร") ){
             state={ farmName:state.farmName, zones:[], cages:[], nextId:1, nextZoneId:1 }; save(); render();
@@ -521,6 +612,92 @@ function bindZoneManager(){
                 save(); openZoneManager(); render();
             }
         });
+    });
+}
+
+/* ========================================================= SETTINGS MODAL (CLOUD SYNC) ========================================================= */
+function openSettingsModal(){
+    let overlay = document.querySelector(".overlay");
+    if(!overlay){
+        overlay = document.createElement("div"); overlay.className="overlay"; document.body.appendChild(overlay);
+        overlay.addEventListener("click", e=>{ if(e.target===overlay) closeSettingsModal(); });
+    }
+    overlay.innerHTML = settingsModalHTML();
+    bindSettingsModal();
+}
+function closeSettingsModal(){ document.querySelector(".overlay")?.remove(); }
+function settingsModalHTML(){
+    const url = getGasUrl();
+    const s = syncBadgeInfo();
+    return `
+    <div class="modal" style="max-width:480px">
+        <div class="modal-head">
+            <div>
+                <h3>ตั้งค่าซิงก์ข้อมูลข้ามเครื่อง</h3>
+                <div class="sub"> เชื่อมกับ Google Sheets เพื่อให้ทุกเครื่องเห็นข้อมูลเดียวกัน </div>
+            </div>
+            <button class="icon-btn" id="closeSettings"> ✕ </button>
+        </div>
+        <div class="tab-content">
+            <div class="field" style="margin-bottom:10px">
+                <label> Google Apps Script Web App URL </label>
+                <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/xxxxx/exec" value="${escapeHtml(url)}">
+            </div>
+            <p style="font-size:12px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6;">
+                วาง URL ที่ได้จากการ Deploy Google Apps Script เป็น Web App ตรงนี้ (ต้องลงท้ายด้วย /exec) แล้วกดบันทึก ทุกเครื่องที่ตั้งค่า URL เดียวกันจะเห็นและแก้ไขข้อมูลร่วมกันได้
+            </p>
+            <p style="font-size:12.5px; margin:0 0 14px;"> สถานะปัจจุบัน: <b>${s.text}</b> </p>
+            <div class="save-row">
+                <button class="btn danger" id="clearGasUrl"> ยกเลิกการเชื่อมต่อ </button>
+                <button class="btn" id="testGasUrl"> ทดสอบการเชื่อมต่อ </button>
+                <button class="btn primary" id="saveGasUrl"> บันทึก </button>
+            </div>
+        </div>
+    </div>
+    `;
+}
+function bindSettingsModal(){
+    document.getElementById("closeSettings")?.addEventListener("click", closeSettingsModal);
+
+    document.getElementById("testGasUrl")?.addEventListener("click", async ()=>{
+        const val = document.getElementById("gasUrlInput").value.trim();
+        if(!val) return alert("กรุณาใส่ URL ก่อน");
+        const btn = document.getElementById("testGasUrl"); btn.textContent = "กำลังทดสอบ..."; btn.disabled = true;
+        const result = await cloudLoad(val);
+        btn.textContent = "ทดสอบการเชื่อมต่อ"; btn.disabled = false;
+        if(result) alert("เชื่อมต่อสำเร็จ ✅");
+        else alert("เชื่อมต่อไม่สำเร็จ ❌\n\nตรวจสอบว่า:\n- URL ลงท้ายด้วย /exec\n- Deploy เป็นประเภท Web app (ไม่ใช่ Library)\n- Who has access ตั้งเป็น Anyone");
+    });
+
+    document.getElementById("saveGasUrl")?.addEventListener("click", async ()=>{
+        const val = document.getElementById("gasUrlInput").value.trim();
+        setGasUrl(val);
+        closeSettingsModal();
+        if(val){
+            const cloudState = await cloudLoad();
+            if(cloudState && cloudState.cages){
+                state = cloudState;
+                try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+                normalizeState();
+            } else {
+                // Sheet ยังว่าง ให้ดันข้อมูลปัจจุบันขึ้นไปตั้งต้น
+                await cloudSave();
+            }
+            startPolling();
+        } else {
+            clearInterval(pollTimer);
+            syncStatus = "idle";
+        }
+        render();
+    });
+
+    document.getElementById("clearGasUrl")?.addEventListener("click", ()=>{
+        if(!confirm("ยกเลิกการเชื่อมต่อคลาวด์?\n\nข้อมูลในเครื่องนี้จะยังอยู่ แต่จะไม่ซิงก์กับเครื่องอื่นอีก")) return;
+        setGasUrl("");
+        clearInterval(pollTimer);
+        syncStatus = "idle";
+        closeSettingsModal();
+        render();
     });
 }
 
