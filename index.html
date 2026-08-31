@@ -219,14 +219,24 @@ const app = document.getElementById("app");
 
 /* ========================================================= CLOUD SYNC ========================================================= */
 const GAS_URL_KEY = "tilapia-farm-gas-url";
-let gasUrl = localStorage.getItem(GAS_URL_KEY) || "";
+// URL หลักของระบบ ฝังไว้เป็นค่าเริ่มต้น เผื่อ localStorage ของเบราว์เซอร์ถูกล้าง
+// เว็บจะยังเชื่อมต่อคลาวด์ได้อัตโนมัติโดยไม่ต้องกรอกใหม่
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwLaoMZ8D_mp2skUTuthp_Zib721BfhUGeXu2BRrBpHj6i-l7gLdZxecaKDaaXPSKmjkw/exec";
 let syncStatus = "idle"; // idle | syncing | ok | error
 let lastSyncTime = null;
 let syncDebounce = null;
 let pollTimer = null;
 
-function getGasUrl(){ return localStorage.getItem(GAS_URL_KEY) || ""; }
-function setGasUrl(url){ localStorage.setItem(GAS_URL_KEY, url); gasUrl = url; }
+function getGasUrl(){
+    const v = localStorage.getItem(GAS_URL_KEY);
+    if(v === "__none__") return ""; // ผู้ใช้กดยกเลิกการเชื่อมต่อไว้โดยตั้งใจ
+    return v || DEFAULT_GAS_URL;
+}
+function setGasUrl(url){
+    localStorage.setItem(GAS_URL_KEY, url ? url : "__none__");
+    gasUrl = getGasUrl();
+}
+let gasUrl = getGasUrl();
 
 function syncBadgeInfo(){
     if(!gasUrl) return { text:"☁ ยังไม่เชื่อมต่อคลาวด์ · แตะเพื่อตั้งค่า", cls:"" };
