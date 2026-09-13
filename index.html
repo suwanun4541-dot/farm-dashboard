@@ -46,6 +46,8 @@
         .stat{ background:rgba(239,233,218,.08); border:1px solid rgba(239,233,218,.16); border-radius:var(--radius); padding:9px 15px; min-width:100px; }
         .stat .n{ font-family:var(--font-mono); font-weight:600; font-size:19px; color:#F6F2E7; line-height:1.1; }
         .stat .l{ font-size:11px; color:#AFC0BF; margin-top:2px; }
+        .stat.clickable{ cursor:pointer; transition:.15s; }
+        .stat.clickable:hover{ background:rgba(199,154,62,.18); border-color:var(--gold); }
         
         /* CONTROLS */
         .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:16px 20px 8px; position:relative; z-index:1; }
@@ -214,7 +216,7 @@ const STATUS = {
     empty:{ label:"ว่าง", hex:"#84908F" }
 };
 const DEFAULT_ZONE_COLORS = [ "#2F6B3E", "#7A2020", "#1F3A66", "#7A5A1F", "#3D2E63", "#1F6B66" ];
-let state = null; let activeCageId = null; let activeTab = "general"; let statusFilter = ""; let zoneManagerOpen = false; let batchSummaryOpen = false;
+let state = null; let activeCageId = null; let activeTab = "general"; let statusFilter = ""; let zoneManagerOpen = false; let batchSummaryOpen = false; let statusSummaryOpen = null;
 const app = document.getElementById("app");
 
 /* ========================================================= CLOUD SYNC ========================================================= */
@@ -395,9 +397,10 @@ function totals(){
 /* ========================================================= MAIN RENDER ========================================================= */
 function render(){
     app.innerHTML = bannerHTML() + statsHTML() + controlsHTML() + layoutHTML();
-    bindBanner(); bindControls(); bindCages();
+    bindBanner(); bindControls(); bindCages(); bindStats();
     if(zoneManagerOpen) openZoneManager();
     if(batchSummaryOpen) openBatchSummary();
+    if(statusSummaryOpen) openStatusSummary(statusSummaryOpen);
 }
 
 /* ========================================================= HEADER ========================================================= */
@@ -433,15 +436,16 @@ function bannerHTML(){
 function statsHTML(){
     const t=totals();
     const stats=[
-        [t.active,"กระชังที่มีปลา"],
-        [ t.fish.toLocaleString("th-TH"), "จำนวนปลารวม (ตัว)" ],
-        [t.ready,"พร้อมจับ"], [t.sick,"ต้องดูแล/ป่วย"],
-        [ t.mortality.toLocaleString("th-TH"), "ปลาตายสะสม (ตัว)" ],
-        [ t.feedCost.toLocaleString("th-TH"), "ค่าอาหารสะสม (บาท)" ]
+        [t.active,"กระชังที่มีปลา", null],
+        [ t.fish.toLocaleString("th-TH"), "จำนวนปลารวม (ตัว)", null ],
+        [t.ready,"พร้อมจับ", ["ready"]],
+        [t.sick,"ต้องดูแล/ป่วย", ["watch","sick"]],
+        [ t.mortality.toLocaleString("th-TH"), "ปลาตายสะสม (ตัว)", null ],
+        [ t.feedCost.toLocaleString("th-TH"), "ค่าอาหารสะสม (บาท)", null ]
     ];
     return `
     <div class="stats-row">
-        ${stats.map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("")}
+        ${stats.map(([n,l,statuses])=>`<div class="stat ${statuses?"clickable":""}" ${statuses?`data-statuses="${statuses.join(",")}" title="คลิกเพื่อดูสรุป"`:""}><div class="n">${n}</div><div class="l">${l}</div></div>`).join("")}
     </div>
     `;
 }
@@ -458,7 +462,7 @@ function controlsHTML(){
             ${ Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${statusFilter===k?"selected":""}>${v.label}</option>`).join("") }
         </select>
         <button class="btn" id="settingsBtn"> ⚙ ตั้งค่าซิงก์คลาวด์ </button>
-        <button class="btn danger" id="resetBtn"> ล้างผังทั้งหมด </button>
+        <button class="btn danger" id="resetBtn"> ล้างข้อมูลแต่ละกระชัง </button>
     </div>
     `;
 }
@@ -536,9 +540,21 @@ function bindControls(){
     document.getElementById("filterStatus")?.addEventListener("change", e=>{ statusFilter=e.target.value; render(); });
     document.getElementById("settingsBtn")?.addEventListener("click", openSettingsModal);
     document.getElementById("resetBtn")?.addEventListener("click", ()=>{
-        if( confirm("ล้างผังกระชังทั้งหมด?\n\nข้อมูลทั้งหมดจะถูกลบถาวร") ){
-            state={ farmName:state.farmName, zones:[], cages:[], nextId:1, nextZoneId:1 }; save(); render();
+        if( confirm("ล้างข้อมูลของทุกกระชัง?\n\nกระชังและโซนจะยังอยู่ครบเหมือนเดิม แต่ข้อมูลที่กรอกไว้ในแต่ละกระชัง (รุ่น, ราคา, จำนวนปลา, น้ำหนัก, สถานะ, บันทึกอาหาร/ปลาตาย/สุ่มชั่ง ฯลฯ) จะถูกลบถาวร") ){
+            state.cages.forEach(c=>{
+                c.batch=""; c.price=null; c.stockDate=""; c.initialCount=null; c.initialWeight=null;
+                c.currentCount=null; c.latestAvgWeight=null; c.netSize=""; c.status="empty"; c.notes=""; c.logs=[];
+            });
+            save(); render();
         }
+    });
+}
+function bindStats(){
+    document.querySelectorAll(".stat[data-statuses]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+            const statuses = el.dataset.statuses.split(",");
+            openStatusSummary(statuses);
+        });
     });
 }
 function bindCages(){
@@ -772,6 +788,102 @@ function batchSummaryHTML(){
         </div>
     </div>
     `;
+}
+
+/* ========================================================= STATUS SUMMARY ========================================================= */
+function openStatusSummary(statuses){
+    statusSummaryOpen = statuses;
+    let overlay= document.querySelector(".overlay");
+    if(!overlay){
+        overlay= document.createElement("div"); overlay.className="overlay"; document.body.appendChild( overlay );
+        overlay.addEventListener("click", e=>{ if(e.target===overlay) closeStatusSummary(); });
+    }
+    overlay.innerHTML= statusSummaryHTML(statuses);
+    bindStatusSummary(statuses);
+}
+function closeStatusSummary(){ statusSummaryOpen=null; document.querySelector(".overlay")?.remove(); }
+function statusSummaryHTML(statuses){
+    const labels = statuses.map(s=>STATUS[s]?.label).filter(Boolean).join(" / ");
+    const cages = state.cages.filter(c=>statuses.includes(c.status));
+    return `
+    <div class="modal" style="max-width:680px">
+        <div class="modal-head">
+            <div>
+                <h3>สรุปสถานะ: ${escapeHtml(labels)}</h3>
+                <div class="sub"> ${cages.length} กระชัง </div>
+            </div>
+            <button class="icon-btn" id="closeStatusSummary"> ✕ </button>
+        </div>
+        <div class="tab-content">
+            ${ cages.length===0 ?`<p style="font-size:13px; color:var(--ink-soft)">ไม่มีกระชังในสถานะนี้</p>`
+            :cages.map( c=>{
+                const z= zoneById(c.zoneId); const days= daysSince(c.stockDate); const st= STATUS[c.status]||STATUS.empty;
+                return `
+            <div class="summary-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                    <h4> กระชัง ${escapeHtml(c.code)} <span style="font-size:12.5px; color:var(--ink-soft); font-family:var(--font-body); font-weight:400;"> · โซน ${escapeHtml(z?.name||"—")}${c.batch?` · รุ่น ${escapeHtml(c.batch)}`:""}</span> </h4>
+                    <span style="font-size:11px; padding:3px 9px; border-radius:999px; color:#fff; background:${st.hex}; white-space:nowrap;">${st.label}</span>
+                </div>
+                <div class="grid-2" style="margin-bottom:0;">
+                    <div>จำนวนปลา <b>${ c.currentCount!=null ?c.currentCount.toLocaleString("th-TH") :"—" }</b></div>
+                    <div>น้ำหนักเฉลี่ย <b>${ c.latestAvgWeight!=null ?c.latestAvgWeight+" ก." :"—" }</b></div>
+                    <div>ตาร่อน <b>${ c.netSize ?escapeHtml(c.netSize) :"—" }</b></div>
+                    <div>อายุ <b>${ days!=null ?days+" วัน" :"—" }</b></div>
+                </div>
+                ${ c.notes ?`<div style="margin-top:6px; font-size:12.5px; color:var(--ink-soft);">หมายเหตุ: ${escapeHtml(c.notes)}</div>` :"" }
+            </div>`;
+            }).join("") }
+        </div>
+        <div class="modal-footer">
+            <button class="btn primary" id="printStatusSummaryBtn"> 🖨 ปริ้น PDF </button>
+        </div>
+    </div>
+    `;
+}
+function bindStatusSummary(statuses){
+    document.getElementById("closeStatusSummary")?.addEventListener("click", closeStatusSummary);
+    document.getElementById("printStatusSummaryBtn")?.addEventListener("click", ()=> printStatusSummary(statuses));
+}
+function printStatusSummary(statuses){
+    const labels = statuses.map(s=>STATUS[s]?.label).filter(Boolean).join(" / ");
+    const cages = state.cages.filter(c=>statuses.includes(c.status));
+    const rows = cages.map(c=>{
+        const z= zoneById(c.zoneId); const days= daysSince(c.stockDate);
+        return `<tr>
+            <td>${escapeHtml(c.code)}</td>
+            <td>${escapeHtml(z?.name||"—")}</td>
+            <td>${escapeHtml(c.batch||"—")}</td>
+            <td>${ c.currentCount!=null ?c.currentCount.toLocaleString("th-TH") :"—" }</td>
+            <td>${ c.latestAvgWeight!=null ?c.latestAvgWeight+" ก." :"—" }</td>
+            <td>${ c.netSize ?escapeHtml(c.netSize) :"—" }</td>
+            <td>${ days!=null ?days+" วัน" :"—" }</td>
+            <td>${ escapeHtml(c.notes||"—") }</td>
+        </tr>`;
+    }).join("");
+    const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    <title>สรุปสถานะ ${escapeHtml(labels)}</title>
+    <style>
+        body{ font-family:'Sarabun',Tahoma,sans-serif; padding:28px; color:#16262A; }
+        h1{ font-size:19px; margin:0 0 4px; }
+        .meta{ color:#4E5E5D; font-size:12px; margin-bottom:16px; }
+        table{ width:100%; border-collapse:collapse; font-size:12px; }
+        th,td{ border:1px solid #ccc; padding:6px 8px; text-align:left; }
+        th{ background:#EFE9DA; }
+        tr:nth-child(even){ background:#F7F4EC; }
+        @media print{ @page{ size:landscape; margin:14mm; } }
+    </style></head><body>
+    <h1>สรุปกระชังสถานะ: ${escapeHtml(labels)}</h1>
+    <div class="meta">${escapeHtml(state.farmName)} · จำนวน ${cages.length} กระชัง · พิมพ์เมื่อ ${new Date().toLocaleString("th-TH")}</div>
+    <table>
+        <thead><tr><th>กระชัง</th><th>โซน</th><th>รุ่น</th><th>จำนวนปลา</th><th>น้ำหนักเฉลี่ย</th><th>ตาร่อน</th><th>อายุ</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>${ rows || `<tr><td colspan="8" style="text-align:center; color:#888;">ไม่มีกระชังในสถานะนี้</td></tr>` }</tbody>
+    </table>
+    <script>window.onload=function(){ window.print(); };<\/script>
+    </body></html>`;
+    const win = window.open("", "_blank");
+    if(!win){ alert("กรุณาอนุญาต pop-up ของเบราว์เซอร์เพื่อพิมพ์ไฟล์ PDF"); return; }
+    win.document.write(html);
+    win.document.close();
 }
 
 /* ========================================================= CAGE MODAL ========================================================= */
